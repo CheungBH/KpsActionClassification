@@ -3,9 +3,8 @@ import csv
 import os
 
 parser = argparse.ArgumentParser(description='Merge CSV files in a folder.')
-parser.add_argument('folder', help='Folder path containing CSV files')
-parser.add_argument('output', help='Output file name')
-
+parser.add_argument('--input_folder', '-i', type=str, help='Folder path containing CSV files')
+parser.add_argument('--output_file', '-o', type=str, help='Output file name')
 args = parser.parse_args()
 
 folder_path = args.folder

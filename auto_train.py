@@ -135,10 +135,10 @@ def main():
         raise ValueError("Invalid algorithm choice.")
 
 
-    if args.algorithm in ["knn", "gbdt", "de_tree", "LR", "RF", "AdaBoost"]:
+    if args.algorithm in ["knn", "gbdt", "de_tree", "LR", "AdaBoost"]:
         feature_train, feature_test, target_train, target_test = train_test_split(load_data_feature(args.file_path, args.feature_num), load_data_target(args.file_path, args.feature_num), test_size=0.3, random_state=0)
 
-    else: # bagging SVM Bayes
+    else: # bagging SVM Bayes RF
         feature_tmp = load_data_feature(args.file_path, args.feature_num)
         feature = data_transform(feature_tmp)
         feature_train, feature_test, target_train, target_test = train_test_split(feature, load_data_target(args.file_path, args.feature_num), test_size=0.3, random_state=0)

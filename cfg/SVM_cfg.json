@@ -1,0 +1,5 @@
+{
+  "C": 0.1,
+  "kernel": "linear",
+  "decision_function_shape" : "ovr"
+}

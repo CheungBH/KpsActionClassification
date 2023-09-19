@@ -1,0 +1,6 @@
+{
+  "random_state": 0,
+  "criterion": "friedman_mse",
+  "loss": "deviance",
+  "learning_rate": 0.1
+}
