@@ -1,46 +1,27 @@
+import csv
+import json
+import os
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, AdaBoostClassifier, BaggingClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.ensemble import BaggingClassifier
-from sklearn import svm
+from sklearn.svm import SVC
 from sklearn.naive_bayes import BernoulliNB
-
-import csv
-import argparse
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 from sklearn.preprocessing import StandardScaler
 from joblib import dump
+import argparse
 
-
-def load_data_feature(file_path, feature_num):
-    data = []
-    traffic_feature = []
+def load_data(file_path, feature_num):
+    data_feature = []
+    data_target = []
     csv_file = csv.reader(open(file_path))
-
     for content in csv_file:
         content = list(map(float, content[:-1]))
         if len(content) != 0:
-            data.append(content)
-            traffic_feature.append(content[0:feature_num])
-    return traffic_feature
-
-def load_data_target(file_path, feature_num):
-    data = []
-    traffic_target = []
-    csv_file = csv.reader(open(file_path))
-
-    for content in csv_file:
-        content = list(map(float, content[:-1]))
-        if len(content) != 0:
-            data.append(content)
-            traffic_target.append(content[feature_num])
-    return traffic_target
+            data_feature.append(content[0:feature_num])
+            data_target.append(content[feature_num])
+    return data_feature, data_target
 
 def data_transform(traffic_feature):
     scaler = StandardScaler()
@@ -48,113 +29,92 @@ def data_transform(traffic_feature):
     traffic_feature = scaler.transform(traffic_feature)
     return traffic_feature
 
+def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_folder):
+    feature_num = 26
+    train_feature, train_target = load_data(train_file, feature_num)
+    test_feature, test_target = load_data(test_file, feature_num)
 
-def train_knn_model(feature_train, target_train, feature_test, target_test):
-    knn = KNeighborsClassifier(n_neighbors=3)
-    knn.fit(feature_train, target_train)
-    predict_results = knn.predict(feature_test)
-    return predict_results
+    config_file = os.path.join(config_folder, f"{algorithm_name}_cfg.json")
+    with open(config_file, 'r') as config_file:
+        config = json.load(config_file)
 
-def train_gbdt_model(feature_train, target_train, feature_test, target_test):
-    gbdt = GradientBoostingClassifier(random_state=0)
-    gbdt.fit(feature_train, target_train)
-    predict_results = gbdt.predict(feature_test)
-    return predict_results
+    algorithm_dict = {
+        'knn': KNeighborsClassifier,
+        'GBDT': GradientBoostingClassifier,
+        'DeTree': DecisionTreeClassifier,
+        'LR': LogisticRegression,
+        'RF': RandomForestClassifier,
+        'AdaBoost': AdaBoostClassifier,
+        'SVM': SVC,
+        'Bayes': BernoulliNB,
+        'bagging': BaggingClassifier
+    }
 
-def train_de_tree_model(feature_train, target_train, feature_test, target_test):
-    dt = DecisionTreeClassifier(random_state=0)
-    dt.fit(feature_train, target_train)
-    predict_results = dt.predict(feature_test)
-    return predict_results
+    if algorithm_name not in algorithm_dict:
+        raise ValueError("Unsupported algorithm")
 
-def train_LR_model(feature_train, target_train, feature_test, target_test):
-    LR = LogisticRegression(solver='liblinear')
-    LR.fit(feature_train, target_train)
-    predict_results = LR.predict(feature_test)
-    return predict_results
+    if algorithm_name in ['RF', 'SVM', 'Bayes', 'bagging']:
+        train_feature = data_transform(train_feature)
+        test_feature = data_transform(test_feature)
 
-def train_RF_model(feature_train, target_train, feature_test, target_test):
-    clf = RandomForestClassifier()
-    clf.fit(feature_train, target_train)
-    predict_results = clf.predict(feature_test)
-    return predict_results
+    algorithm_class = algorithm_dict[algorithm_name]
+    algorithm = algorithm_class(**config)
 
-def train_AdaBoost_model(feature_train, target_train, feature_test, target_test):
-    AB = AdaBoostClassifier(n_estimators=1000)
-    AB.fit(feature_train, target_train)
-    predict_results = AB.predict(feature_test)
-    return predict_results
+    algorithm.fit(train_feature, train_target)
+    predict_results = algorithm.predict(test_feature)
+    dump(algorithm, f"{output_folder}/{algorithm_name}_model.joblib")
 
-def train_SVM_model(feature_train, target_train, feature_test, target_test):
-    # clf = svm.SVC(C=0.8, kernel='rbf', gamma=20, decision_function_shape='ovr')
-    # clf = svm.SVC(C=10, kernel='poly', decision_function_shape='ovr')
-    clf = svm.SVC(C=0.5, kernel='linear', decision_function_shape='ovr')
-    clf.fit(feature_train,target_train)
-    predict_results = clf.predict(feature_test)
-    return predict_results
+    train_accuracy = accuracy_score(predict_results, train_target)
+    print(f"Training accuracy for {algorithm_name} is: {train_accuracy}")
+    test_accuracy = accuracy_score(predict_results, test_target)
+    print(f"Testing accuracy for {algorithm_name} is: {test_accuracy}")
+    print("\nThe confusion matrix is:")
+    conf_mat = confusion_matrix(test_target, predict_results)
+    print(conf_mat)
+    cls_result = []
+    id = 0
+    for row in conf_mat:
+        row_sum = sum(row)
+        row_result = row[id] / row_sum
+        cls_result.append(row_result)
+        id += 1
 
-def train_bayes_model(feature_train, target_train, feature_test, target_test):
-    NB = BernoulliNB()
-    NB.fit(feature_train, target_train)
-    predict_results = NB.predict(feature_test)
-    return predict_results
+    print("\nClass accuracy: ")
+    print(cls_result)
+    print("\n\nOverall result:")
+    print(classification_report(test_target, predict_results))
 
-def train_bagging_model(feature_train, target_train, feature_test, target_test):
-    tree = DecisionTreeClassifier(criterion='entropy', max_depth=None)
-    clf = BaggingClassifier(base_estimator=tree, n_estimators=500, max_samples=1.0, max_features=1.0, bootstrap=True, bootstrap_features=False, n_jobs=1, random_state=1)
-    clf.fit(feature_train, target_train)
-    predict_results = clf.predict(feature_test)
-    return predict_results
+    csv_file_path = "results.csv"
 
+    result_title = ["algo", 'Train Acc', 'Test Acc'] + ['Class ' + str(i) + ' Acc' for i in range(len(cls_result))]
+    result_data = [algorithm_name, train_accuracy, test_accuracy] + [acc for acc in cls_result]
+
+    with open(csv_file_path, 'a', newline='') as file:
+        writer = csv.writer(file)
+        empty = True
+        with open(csv_file_path, 'r') as file:
+            csv_reader = csv.reader(file)
+            for row in csv_reader:
+                if row:
+                    empty = False
+        if empty:
+            writer.writerow(result_title)
+            writer.writerow(result_data)
+        else:
+            writer.writerow(result_data)
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--algorithm", "-a", type=str,
-                        choices=["knn", "gbdt", "de_tree", "LR", "RF", "AdaBoost", "SVM", "bayes", "bagging"],
-                        help="Choose the algorithm to train")
-    parser.add_argument("--file_path", type=str, help="Path to the CSV file")
-    parser.add_argument("--feature_num", type=int, default=26, help="Number of features in the dataset")
-    parser.add_argument("--output_model", "-o", type=str, help="Path to model -- .joblib")
+    parser.add_argument("--train_file", type=str, help="Path to the training CSV file")
+    parser.add_argument("--test_file", type=str, help="Path to the testing CSV file")
+    parser.add_argument("--config_folder", type=str, help="Path to the folder containing config files")
+    parser.add_argument("--output_folder", type=str, help="Path to save the trained models")
     args = parser.parse_args()
 
-    algorithm_mapping = {
-        "knn": train_knn_model,
-        "gbdt": train_gbdt_model,
-        "de_tree": train_de_tree_model,
-        "LR": train_LR_model,
-        "RF": train_RF_model,
-        "AdaBoost": train_AdaBoost_model,
-        "SVM": train_SVM_model,
-        "bayes": train_bayes_model,
-        "bagging": train_bagging_model
-    }
+    algorithm_names = ['knn', 'GBDT', 'DeTree', 'LR', 'RF', 'AdaBoost', 'SVM', 'Bayes', 'bagging']
 
-    if args.algorithm in algorithm_mapping:
-        train_model_func = algorithm_mapping[args.algorithm]
-    else:
-        raise ValueError("Invalid algorithm choice.")
-
-
-    if args.algorithm in ["knn", "gbdt", "de_tree", "LR", "AdaBoost"]:
-        feature_train, feature_test, target_train, target_test = train_test_split(load_data_feature(args.file_path, args.feature_num), load_data_target(args.file_path, args.feature_num), test_size=0.3, random_state=0)
-
-    else: # bagging SVM Bayes RF
-        feature_tmp = load_data_feature(args.file_path, args.feature_num)
-        feature = data_transform(feature_tmp)
-        feature_train, feature_test, target_train, target_test = train_test_split(feature, load_data_target(args.file_path, args.feature_num), test_size=0.3, random_state=0)
-
-
-    predict_results = train_model_func(feature_train, target_train, feature_test, target_test)
-    dump(predict_results, args.output_model)
-
-    print("\nAlgorithm selected: ", args.algorithm, "\n")
-    print("Testing accuracy is {}\n".format(accuracy_score(predict_results, target_test)))
-    conf_mat = confusion_matrix(target_test, predict_results)
-    print("The confusion matrix is:")
-    print(conf_mat)
-    print("\n\nOverall result:")
-    print(classification_report(target_test, predict_results))
-
+    for algorithm_name in algorithm_names:
+        run_algorithm(algorithm_name, args.train_file, args.test_file, args.config_folder, args.output_folder)
 
 if __name__ == "__main__":
     main()
