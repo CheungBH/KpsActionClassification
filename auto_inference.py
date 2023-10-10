@@ -6,8 +6,10 @@ import argparse
 import os
 
 parser = argparse.ArgumentParser(description='ML Model Prediction')
-parser.add_argument('--csv_path', type=str, help='Path to the CSV file')
+parser.add_argument('--csv_path', type=str, help='Path to the input CSV file')
 parser.add_argument('--model_path', type=str, help='Path to the ML model (.joblib) or directory containing joblib files')
+parser.add_argument('--output_path', type=str, default="inference_results.csv", help='Path to the CSV file')
+
 args = parser.parse_args()
 
 # csv_file = csv.reader(open(args.csv_path))
@@ -49,10 +51,10 @@ for model_name, model in models.items():
 
     accuracy = (correct_predictions / total_samples) * 100
     results[model_name] = {
-        'total_time': total_time,
+        'total_time': total_time/total_samples,
         'accuracy': accuracy
     }
-output_csv = "inference_results.csv"
+output_csv = args.output_path
 print("Model\t\tTotal Time (s)\tAccuracy (%)")
 for model_name, result in results.items():
     print(f"{model_name}\t{result['total_time']:.6f}\t\t{result['accuracy']:.6f}")
