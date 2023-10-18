@@ -1,6 +1,9 @@
 {
   "random_state": 0,
+  "n_estimators": 500,
   "criterion": "friedman_mse",
-  "loss": "deviance",
-  "learning_rate": 0.1
+  "learning_rate": 0.01,
+  "min_samples_split": 4,
+  "min_samples_leaf": 4,
+  "max_depth": 10
 }
