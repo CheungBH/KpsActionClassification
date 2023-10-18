@@ -52,7 +52,7 @@ for model_name, model in models.items():
         'total_time': total_time,
         'accuracy': accuracy
     }
-output_csv = "inference_results.csv"
+output_csv = "/media/hkuit164/Backup/xjl/ML_data_process/ML/2cls_nw_test/1_results/inference.csv"
 print("Model\t\tTotal Time (s)\tAccuracy (%)")
 for model_name, result in results.items():
     print(f"{model_name}\t{result['total_time']:.6f}\t\t{result['accuracy']:.6f}")

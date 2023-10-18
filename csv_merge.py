@@ -7,10 +7,14 @@ parser.add_argument('--input_folder', '-i', type=str, help='Folder path containi
 parser.add_argument('--output_file', '-o', type=str, help='Output file name')
 args = parser.parse_args()
 
-folder_path = args.folder
-output_file = args.output
+folder_path = args.input_folder
+output_file = args.output_file
 
 csv_files = [file for file in os.listdir(folder_path) if file.endswith('.csv')]
+
+def sort_by_column(data, column_index):
+    sorted_data = sorted(data, key=lambda row: float(row[column_index]), reverse=True)
+    return sorted_data
 
 with open(output_file, 'w', newline='') as outfile:
     writer = csv.writer(outfile)
@@ -22,3 +26,4 @@ with open(output_file, 'w', newline='') as outfile:
             reader = csv.reader(infile)
             for row in reader:
                 writer.writerow(row)
+
