@@ -17,7 +17,7 @@ def load_data(file_path, feature_num):
     data_target = []
     csv_file = csv.reader(open(file_path))
     for content in csv_file:
-        content = list(map(float, content[:-1]))
+        content = list(map(float, content[:-2]))
         if len(content) != 0:
             data_feature.append(content[0:feature_num])
             data_target.append(content[feature_num])
@@ -29,7 +29,7 @@ def data_transform(traffic_feature):
     traffic_feature = scaler.transform(traffic_feature)
     return traffic_feature
 
-def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_folder):
+def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_folder, csv_file_path):
     feature_num = 34
     train_feature, train_target = load_data(train_file, feature_num)
     test_feature, test_target = load_data(test_file, feature_num)
@@ -104,7 +104,7 @@ def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_f
     print("\n\nOverall test result:")
     print(classification_report(test_target, predict_results_test))
 
-    csv_file_path = "/media/hkuit164/Backup/xjl/ML_data_process/ML/2cls_nw_test/1_results/test_results.csv"
+    # csv_file_path = "/media/hkuit164/Backup/xjl/ML_data_process/ML/0206far/csv/results.csv"
 
     result_title = ["algo", 'Train Acc', 'Test Acc'] + ['Class ' + str(i) + ' Acc' for i in range(len(test_cls_result))]
     result_data = [algorithm_name, train_accuracy, test_accuracy] + [acc for acc in test_cls_result]
@@ -129,12 +129,13 @@ def main():
     parser.add_argument("--test_file", type=str, help="Path to the testing CSV file")
     parser.add_argument("--config_folder", type=str, help="Path to the folder containing config files")
     parser.add_argument("--output_folder", type=str, help="Path to save the trained models")
+    parser.add_argument("--output_csv", type=str, help="Path to the performance csv file")
     args = parser.parse_args()
 
     algorithm_names = ['knn', 'GBDT', 'DeTree', 'LR', 'RF', 'AdaBoost', 'SVM', 'Bayes', 'bagging']
 
     for algorithm_name in algorithm_names:
-        run_algorithm(algorithm_name, args.train_file, args.test_file, args.config_folder, args.output_folder)
+        run_algorithm(algorithm_name, args.train_file, args.test_file, args.config_folder, args.output_folder, args.output_csv)
 
 if __name__ == "__main__":
     main()
