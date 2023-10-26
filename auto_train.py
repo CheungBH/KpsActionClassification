@@ -17,7 +17,7 @@ def load_data(file_path, feature_num):
     data_target = []
     csv_file = csv.reader(open(file_path))
     for content in csv_file:
-        content = list(map(float, content[:-1]))
+        content = list(map(float, content[:-2]))
         if len(content) != 0:
             data_feature.append(content[0:feature_num])
             data_target.append(content[feature_num])
@@ -29,8 +29,8 @@ def data_transform(traffic_feature):
     traffic_feature = scaler.transform(traffic_feature)
     return traffic_feature
 
-def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_folder):
-    feature_num = 26
+def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_folder, csv_file_path):
+    feature_num = 34
     train_feature, train_target = load_data(train_file, feature_num)
     test_feature, test_target = load_data(test_file, feature_num)
 
@@ -61,33 +61,53 @@ def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_f
     algorithm = algorithm_class(**config)
 
     algorithm.fit(train_feature, train_target)
-    predict_results = algorithm.predict(test_feature)
+    predict_results_train = algorithm.predict(train_feature)
+    predict_results_test = algorithm.predict(test_feature)
     dump(algorithm, f"{output_folder}/{algorithm_name}_model.joblib")
 
-    train_accuracy = accuracy_score(predict_results, train_target)
+    train_accuracy = accuracy_score(predict_results_train, train_target)
     print(f"Training accuracy for {algorithm_name} is: {train_accuracy}")
-    test_accuracy = accuracy_score(predict_results, test_target)
+    test_accuracy = accuracy_score(predict_results_test, test_target)
     print(f"Testing accuracy for {algorithm_name} is: {test_accuracy}")
-    print("\nThe confusion matrix is:")
-    conf_mat = confusion_matrix(test_target, predict_results)
-    print(conf_mat)
-    cls_result = []
-    id = 0
-    for row in conf_mat:
+
+    print("\nThe train confusion matrix is:")
+    train_conf_mat = confusion_matrix(train_target, predict_results_train)
+    print(train_conf_mat)
+
+    train_cls_result = []
+    train_id = 0
+    for row in train_conf_mat:
         row_sum = sum(row)
-        row_result = row[id] / row_sum
-        cls_result.append(row_result)
-        id += 1
+        row_result = row[train_id] / row_sum
+        train_cls_result.append(row_result)
+        train_id += 1
 
-    print("\nClass accuracy: ")
-    print(cls_result)
-    print("\n\nOverall result:")
-    print(classification_report(test_target, predict_results))
+    print("\nThe test confusion matrix is:")
+    test_conf_mat = confusion_matrix(test_target, predict_results_test)
+    print(test_conf_mat)
 
-    csv_file_path = "results.csv"
+    test_cls_result = []
+    test_id = 0
+    for row in test_conf_mat:
+        row_sum = sum(row)
+        row_result = row[test_id] / row_sum
+        test_cls_result.append(row_result)
+        test_id += 1
 
-    result_title = ["algo", 'Train Acc', 'Test Acc'] + ['Class ' + str(i) + ' Acc' for i in range(len(cls_result))]
-    result_data = [algorithm_name, train_accuracy, test_accuracy] + [acc for acc in cls_result]
+    print("\nTrain Class accuracy: ")
+    print(train_cls_result)
+    print("\nTest Class accuracy: ")
+    print(test_cls_result)
+
+    print("\n\nOverall train result:")
+    print(classification_report(train_target, predict_results_train))
+    print("\n\nOverall test result:")
+    print(classification_report(test_target, predict_results_test))
+
+    # csv_file_path = "/media/hkuit164/Backup/xjl/ML_data_process/ML/0206far/csv/results.csv"
+
+    result_title = ["algo", 'Train Acc', 'Test Acc'] + ['Class ' + str(i) + ' Acc' for i in range(len(test_cls_result))]
+    result_data = [algorithm_name, train_accuracy, test_accuracy] + [acc for acc in test_cls_result]
 
     with open(csv_file_path, 'a', newline='') as file:
         writer = csv.writer(file)
@@ -109,12 +129,13 @@ def main():
     parser.add_argument("--test_file", type=str, help="Path to the testing CSV file")
     parser.add_argument("--config_folder", type=str, help="Path to the folder containing config files")
     parser.add_argument("--output_folder", type=str, help="Path to save the trained models")
+    parser.add_argument("--output_csv", type=str, help="Path to the performance csv file")
     args = parser.parse_args()
 
     algorithm_names = ['knn', 'GBDT', 'DeTree', 'LR', 'RF', 'AdaBoost', 'SVM', 'Bayes', 'bagging']
 
     for algorithm_name in algorithm_names:
-        run_algorithm(algorithm_name, args.train_file, args.test_file, args.config_folder, args.output_folder)
+        run_algorithm(algorithm_name, args.train_file, args.test_file, args.config_folder, args.output_folder, args.output_csv)
 
 if __name__ == "__main__":
     main()

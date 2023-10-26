@@ -54,7 +54,9 @@ for model_name, model in models.items():
         'total_time': total_time/total_samples,
         'accuracy': accuracy
     }
+
 output_csv = args.output_path
+
 print("Model\t\tTotal Time (s)\tAccuracy (%)")
 for model_name, result in results.items():
     print(f"{model_name}\t{result['total_time']:.6f}\t\t{result['accuracy']:.6f}")
