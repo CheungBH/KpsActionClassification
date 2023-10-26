@@ -35,7 +35,7 @@ for model_name, model in models.items():
     total_samples = 0
 
     for row in csv_data:
-        data = list(map(float, row[:-1]))
+        data = list(map(float, row[:-2]))
         content = [data[:-1]]
         label = data[-1]
         start_time = time.time()
