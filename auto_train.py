@@ -12,6 +12,7 @@ from sklearn.preprocessing import StandardScaler
 from joblib import dump
 import argparse
 
+
 def load_data(file_path, feature_num):
     data_feature = []
     data_target = []
@@ -23,14 +24,21 @@ def load_data(file_path, feature_num):
             data_target.append(content[feature_num])
     return data_feature, data_target
 
+
 def data_transform(traffic_feature):
     scaler = StandardScaler()
     scaler.fit(traffic_feature)
     traffic_feature = scaler.transform(traffic_feature)
     return traffic_feature
 
-def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_folder, csv_file_path):
-    feature_num = 34
+
+def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_folder, csv_file_path, box_size, box_ratio, feature_num):
+
+    if box_size is True:
+        feature_num += 8
+
+    if box_ratio is True:
+        feature_num += 1
     train_feature, train_target = load_data(train_file, feature_num)
     test_feature, test_target = load_data(test_file, feature_num)
 
@@ -120,8 +128,11 @@ def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_f
         if empty:
             writer.writerow(result_title)
             writer.writerow(result_data)
+            writer.writerow(test_conf_mat)
         else:
             writer.writerow(result_data)
+            writer.writerow(test_conf_mat)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -132,10 +143,14 @@ def main():
     parser.add_argument("--output_csv", type=str, help="Path to the performance csv file")
     args = parser.parse_args()
 
+    feature_number = 26
+    bbox_size = False
+    bbox_hw_ratio = False
     algorithm_names = ['knn', 'GBDT', 'DeTree', 'LR', 'RF', 'AdaBoost', 'SVM', 'Bayes', 'bagging']
 
     for algorithm_name in algorithm_names:
-        run_algorithm(algorithm_name, args.train_file, args.test_file, args.config_folder, args.output_folder, args.output_csv)
+        run_algorithm(algorithm_name, args.train_file, args.test_file, args.config_folder, args.output_folder, args.output_csv, bbox_size, bbox_hw_ratio, feature_number)
+
 
 if __name__ == "__main__":
     main()
