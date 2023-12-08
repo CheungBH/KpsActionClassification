@@ -12,8 +12,8 @@ class Augmentor:
         for d, l in zip(data, label):
             x_shift = random.uniform(-self.shift_range, self.shift_range)
             y_shift = random.uniform(-self.shift_range, self.shift_range)
-            x_scale = random.uniform(-self.shift_range, self.shift_range)
-            y_scale = random.uniform(-self.shift_range, self.shift_range)
+            x_scale = random.uniform(-self.scale_range, self.scale_range)
+            y_scale = random.uniform(-self.scale_range, self.scale_range)
             self.augmented_data.append(self._augment(d, x_shift, y_shift, x_scale, y_scale))
             self.augmented_label.append(l)
 
