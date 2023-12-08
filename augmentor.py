@@ -24,6 +24,8 @@ class Augmentor:
                 augmented_data.append(d - ((d - 0.5) * x_shift) + x_scale)
             else:
                 augmented_data.append(d - ((d - 0.5) * y_shift) + y_scale)
+            if i > 34:
+                break
         return augmented_data
 
     def append_dataset(self, data, label):
@@ -31,3 +33,23 @@ class Augmentor:
 
     def visualize(self):
         pass
+
+
+if __name__ == '__main__':
+    import csv
+    file_path = "data/20231207_ML_model/train.csv"
+    data_feature = []
+    data_target = []
+    feature_num = 35
+
+    csv_file = csv.reader(open(file_path))
+    for content in csv_file:
+        content = list(map(float, content[:-1]))
+        if len(content) != 0:
+            data_feature.append(content[0:feature_num])
+            data_target.append(content[feature_num])
+
+    augmentor = Augmentor()
+    augmentor.augment(data_feature, data_target)
+    # data_feature, data_target = augmentor.append_dataset(data_feature, data_target)
+    augmentor.visualize()
