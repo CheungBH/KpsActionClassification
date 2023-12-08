@@ -11,17 +11,23 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 from sklearn.preprocessing import StandardScaler
 from joblib import dump
 import argparse
+from augmentor import Augmentor
 
 
-def load_data(file_path, feature_num):
+def load_data(file_path, feature_num, augment=False):
     data_feature = []
     data_target = []
     csv_file = csv.reader(open(file_path))
     for content in csv_file:
-        content = list(map(float, content[:-2]))
+        content = list(map(float, content[:-1]))
         if len(content) != 0:
             data_feature.append(content[0:feature_num])
             data_target.append(content[feature_num])
+
+    if augment is True:
+        augmentor = Augmentor()
+        augmentor.augment(data_feature, data_target)
+        data_feature, data_target = augmentor.append_dataset(data_feature, data_target)
     return data_feature, data_target
 
 
@@ -39,7 +45,7 @@ def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_f
 
     if box_ratio is True:
         feature_num += 1
-    train_feature, train_target = load_data(train_file, feature_num)
+    train_feature, train_target = load_data(train_file, feature_num, augment=True)
     test_feature, test_target = load_data(test_file, feature_num)
 
     config_file = os.path.join(config_folder, f"{algorithm_name}_cfg.json")
@@ -136,14 +142,14 @@ def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_f
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train_file", type=str, help="Path to the training CSV file")
-    parser.add_argument("--test_file", type=str, help="Path to the testing CSV file")
-    parser.add_argument("--config_folder", type=str, help="Path to the folder containing config files")
-    parser.add_argument("--output_folder", type=str, help="Path to save the trained models")
-    parser.add_argument("--output_csv", type=str, help="Path to the performance csv file")
+    parser.add_argument("--train_file", type=str, help="Path to the training CSV file", default="data/20231207_ML_model/train.csv")
+    parser.add_argument("--test_file", type=str, help="Path to the testing CSV file", default="data/20231207_ML_model/test.csv")
+    parser.add_argument("--config_folder", type=str, help="Path to the folder containing config files", default="cfg")
+    parser.add_argument("--output_folder", type=str, help="Path to save the trained models", default="exp")
+    parser.add_argument("--output_csv", type=str, help="Path to the performance csv file", default="exp/results.csv")
     args = parser.parse_args()
 
-    feature_number = 26
+    feature_number = 35
     bbox_size = False
     bbox_hw_ratio = False
     algorithm_names = ['knn', 'GBDT', 'DeTree', 'LR', 'RF', 'AdaBoost', 'SVM', 'Bayes', 'bagging']
