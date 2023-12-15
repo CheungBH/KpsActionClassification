@@ -7,6 +7,7 @@ class Augmentor:
     def __init__(self):
         self.shift_range = 0.2
         self.scale_range = 0.1
+        self.flip_factor = 0.5
         self.augmented_data = []
         self.augmented_label = []
         self.color_dict = [(0, 255, 0), (0, 0, 255), (255, 0, 0), (0, 255, 255), (255, 255, 0)]
@@ -27,14 +28,17 @@ class Augmentor:
             y_shift = random.uniform(-self.shift_range, self.shift_range)
             x_scale = random.uniform(-self.scale_range, self.scale_range)
             y_scale = random.uniform(-self.scale_range, self.scale_range)
-            self.augmented_data.append(self._augment(d, x_shift, y_shift, x_scale, y_scale))
+            flip_x = random.uniform(0, 1)
+            self.augmented_data.append(self._augment(d, x_shift, y_shift, x_scale, y_scale, flip_x))
             self.augmented_label.append(l)
-            self.augment_factor.append([x_shift, y_shift, x_scale, y_scale])
+            self.augment_factor.append([x_shift, y_shift, x_scale, y_scale, flip_x])
 
-    def _augment(self, data, x_shift, y_shift, x_scale, y_scale):
+    def _augment(self, data, x_shift, y_shift, x_scale, y_scale, flip_x):
         augmented_data = []
         for i, d in enumerate(data):
             if i % 2 == 0:
+                if flip_x > self.flip_factor:
+                    d = 1 - d
                 augmented_data.append(d - ((d - 0.5) * x_shift) + x_scale)
             else:
                 augmented_data.append(d - ((d - 0.5) * y_shift) + y_scale)
