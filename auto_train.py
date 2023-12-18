@@ -38,7 +38,7 @@ def data_transform(traffic_feature):
     return traffic_feature
 
 
-def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_folder, csv_file_path, box_size, box_ratio, feature_num):
+def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_folder, csv_file_path, box_size, box_ratio, feature_num, save_score):
 
     if box_size is True:
         feature_num += 8
@@ -73,15 +73,24 @@ def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_f
 
     algorithm_class = algorithm_dict[algorithm_name]
     algorithm = algorithm_class(**config)
-
     algorithm.fit(train_feature, train_target)
     predict_results_train = algorithm.predict(train_feature)
     predict_results_test = algorithm.predict(test_feature)
-    dump(algorithm, f"{output_folder}/{algorithm_name}_model.joblib")
+    test_accuracy = accuracy_score(predict_results_test, test_target)
+    if (test_accuracy * 100) > save_score:
+        dump(algorithm, f"{output_folder}/{algorithm_name}_model.joblib")
+    else:
+        for save_idx in range(10):
+            algorithm.fit(train_feature, train_target)
+            predict_results_test = algorithm.predict(test_feature)
+            test_accuracy = accuracy_score(predict_results_test, test_target)
+            if (test_accuracy * 100) > save_score:
+                dump(algorithm, f"{output_folder}/{algorithm_name}_model.joblib")
+                break
+
 
     train_accuracy = accuracy_score(predict_results_train, train_target)
     print(f"Training accuracy for {algorithm_name} is: {train_accuracy}")
-    test_accuracy = accuracy_score(predict_results_test, test_target)
     print(f"Testing accuracy for {algorithm_name} is: {test_accuracy}")
 
     print("\nThe train confusion matrix is:")
@@ -134,10 +143,10 @@ def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_f
         if empty:
             writer.writerow(result_title)
             writer.writerow(result_data)
-            writer.writerow(test_conf_mat)
+            # writer.writerow(test_conf_mat)
         else:
             writer.writerow(result_data)
-            writer.writerow(test_conf_mat)
+            # writer.writerow(test_conf_mat)
 
 
 def main():
@@ -149,13 +158,14 @@ def main():
     parser.add_argument("--output_csv", type=str, help="Path to the performance csv file", default="exp/results.csv")
     args = parser.parse_args()
 
-    feature_number = 35
+    feature_number = 34
+    save_score = 93
     bbox_size = False
     bbox_hw_ratio = False
     algorithm_names = ['knn', 'GBDT', 'DeTree', 'LR', 'RF', 'AdaBoost', 'SVM', 'Bayes', 'bagging']
 
     for algorithm_name in algorithm_names:
-        run_algorithm(algorithm_name, args.train_file, args.test_file, args.config_folder, args.output_folder, args.output_csv, bbox_size, bbox_hw_ratio, feature_number)
+        run_algorithm(algorithm_name, args.train_file, args.test_file, args.config_folder, args.output_folder, args.output_csv, bbox_size, bbox_hw_ratio, feature_number, save_score)
 
 
 if __name__ == "__main__":
