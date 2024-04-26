@@ -157,7 +157,7 @@ def main():
     # parser.add_argument("--train_file", type=str, help="Path to the training CSV file", default="data/20231207_ML_model/train.csv")
     # parser.add_argument("--test_file", type=str, help="Path to the testing CSV file", default="data/20231207_ML_model/test.csv")
     parser.add_argument("--data_folder", type=str, help="Path to the folder of CSV files", required=True)
-    parser.add_argument("--config_folder", type=str, help="Path to the folder containing config files", default="cfg")
+    parser.add_argument("--config_folder", type=str, help="Path to the folder containing config files", default="cfg/base")
     parser.add_argument("--output_folder", type=str, help="Path to save the trained models", default="exp")
     parser.add_argument("--feature_number", type=int, default=34)
     parser.add_argument("--save_score", type=int, default=0)
