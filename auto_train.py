@@ -14,6 +14,18 @@ import argparse
 from augmentor import Augmentor
 
 
+algorithm_dict = {
+    'knn': KNeighborsClassifier,
+    'GBDT': GradientBoostingClassifier,
+    'DeTree': DecisionTreeClassifier,
+    'LR': LogisticRegression,
+    'RF': RandomForestClassifier,
+    'AdaBoost': AdaBoostClassifier,
+    'SVM': SVC,
+    'Bayes': BernoulliNB,
+    'bagging': BaggingClassifier
+}
+
 def load_data(file_path, feature_num, augment=False):
     data_feature = []
     data_target = []
@@ -38,7 +50,7 @@ def data_transform(traffic_feature):
     return traffic_feature
 
 
-def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_folder, csv_file_path, box_size, box_ratio, feature_num, save_score):
+def run_algorithm(config_file, train_file, test_file, config_folder, output_folder, csv_file_path, box_size, box_ratio, feature_num, save_score):
 
     if box_size is True:
         feature_num += 8
@@ -48,21 +60,11 @@ def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_f
     train_feature, train_target = load_data(train_file, feature_num, augment=True)
     test_feature, test_target = load_data(test_file, feature_num)
 
-    config_file = os.path.join(config_folder, f"{algorithm_name}_cfg.json")
-    with open(config_file, 'r') as config_file:
-        config = json.load(config_file)
-
-    algorithm_dict = {
-        'knn': KNeighborsClassifier,
-        'GBDT': GradientBoostingClassifier,
-        'DeTree': DecisionTreeClassifier,
-        'LR': LogisticRegression,
-        'RF': RandomForestClassifier,
-        'AdaBoost': AdaBoostClassifier,
-        'SVM': SVC,
-        'Bayes': BernoulliNB,
-        'bagging': BaggingClassifier
-    }
+    # config_file = os.path.join(config_folder, f"{algorithm_name}_cfg.json")
+    with open(config_file, 'r') as f:
+        config = json.load(f)
+    algorithm_name = config["name"]
+    config.pop("name")
 
     if algorithm_name not in algorithm_dict:
         raise ValueError("Unsupported algorithm")
@@ -78,7 +80,8 @@ def run_algorithm(algorithm_name, train_file, test_file, config_folder, output_f
     predict_results_test = algorithm.predict(test_feature)
     test_accuracy = accuracy_score(predict_results_test, test_target)
     if (test_accuracy * 100) > save_score:
-        dump(algorithm, f"{output_folder}/{algorithm_name}_model.joblib")
+        config_name = config_file.split("/")[-1].split(".")[0]
+        dump(algorithm, f"{output_folder}/{config_name}_model.joblib")
     else:
         for save_idx in range(10):
             algorithm.fit(train_feature, train_target)
@@ -155,17 +158,23 @@ def main():
     parser.add_argument("--test_file", type=str, help="Path to the testing CSV file", default="data/20231207_ML_model/test.csv")
     parser.add_argument("--config_folder", type=str, help="Path to the folder containing config files", default="cfg")
     parser.add_argument("--output_folder", type=str, help="Path to save the trained models", default="exp")
-    parser.add_argument("--output_csv", type=str, help="Path to the performance csv file", default="exp/results.csv")
+    parser.add_argument("--feature_number", type=int, default=34)
+    parser.add_argument("--save_score", type=int, default=0)
+
     args = parser.parse_args()
 
-    feature_number = 34
-    save_score = 93
+    feature_number = args.feature_number
+    os.makedirs(args.output_folder, exist_ok=True)
+    save_score = args.save_score
     bbox_size = False
     bbox_hw_ratio = False
-    algorithm_names = ['knn', 'GBDT', 'DeTree', 'LR', 'RF', 'AdaBoost', 'SVM', 'Bayes', 'bagging']
-
-    for algorithm_name in algorithm_names:
-        run_algorithm(algorithm_name, args.train_file, args.test_file, args.config_folder, args.output_folder, args.output_csv, bbox_size, bbox_hw_ratio, feature_number, save_score)
+    algorithm_configs = [os.path.join(args.config_folder, config) for config in os.listdir(args.config_folder)]
+    # algorithm_names = ['knn', 'GBDT', 'DeTree', 'LR', 'RF', 'AdaBoost', 'SVM', 'Bayes', 'bagging']
+    output_csv = os.path.join(args.output_folder, "results.csv")
+    for idx, algorithm_config in enumerate(algorithm_configs):
+        print(f"Running {algorithm_config}")
+        run_algorithm(algorithm_config, args.train_file, args.test_file, args.config_folder, args.output_folder,
+                      output_csv, bbox_size, bbox_hw_ratio, feature_number, save_score)
 
 
 if __name__ == "__main__":
