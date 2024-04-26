@@ -154,14 +154,16 @@ def run_algorithm(config_file, train_file, test_file, config_folder, output_fold
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train_file", type=str, help="Path to the training CSV file", default="data/20231207_ML_model/train.csv")
-    parser.add_argument("--test_file", type=str, help="Path to the testing CSV file", default="data/20231207_ML_model/test.csv")
+    # parser.add_argument("--train_file", type=str, help="Path to the training CSV file", default="data/20231207_ML_model/train.csv")
+    # parser.add_argument("--test_file", type=str, help="Path to the testing CSV file", default="data/20231207_ML_model/test.csv")
+    parser.add_argument("--data_folder", type=str, help="Path to the folder of CSV files", required=True)
     parser.add_argument("--config_folder", type=str, help="Path to the folder containing config files", default="cfg")
     parser.add_argument("--output_folder", type=str, help="Path to save the trained models", default="exp")
     parser.add_argument("--feature_number", type=int, default=34)
     parser.add_argument("--save_score", type=int, default=0)
 
     args = parser.parse_args()
+    train_file, test_file = os.path.join(args.data_folder, "train.csv"), os.path.join(args.data_folder, "val.csv")
 
     feature_number = args.feature_number
     os.makedirs(args.output_folder, exist_ok=True)
@@ -173,7 +175,7 @@ def main():
     output_csv = os.path.join(args.output_folder, "results.csv")
     for idx, algorithm_config in enumerate(algorithm_configs):
         print(f"Running {algorithm_config}")
-        run_algorithm(algorithm_config, args.train_file, args.test_file, args.config_folder, args.output_folder,
+        run_algorithm(algorithm_config, train_file, test_file, args.config_folder, args.output_folder,
                       output_csv, bbox_size, bbox_hw_ratio, feature_number, save_score)
 
 
