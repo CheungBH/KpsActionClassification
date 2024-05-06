@@ -13,14 +13,26 @@ class Augmentor:
         self.color_dict = [(0, 255, 0), (0, 0, 255), (255, 0, 0), (0, 255, 255), (255, 255, 0)]
         self.color_idx = [4, 7, 10, 13, 16]
         self.augment_factor = []
+        self.connection = [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (1, 3), (2, 4), (3, 4), (5, 6), (5, 7), (7, 9), (6, 8), (8, 10), (11, 12), (11, 13), (13, 15), (12, 14), (14, 16), (5, 11), (6, 12)]
 
+    # def choose_color(self, coord_i):
+        # c_idx = 0
+        # while True:
+        #     if coord_i <= self.color_idx[c_idx]:
+        #         return self.color_dict[c_idx]
+        #     else:
+        #         c_idx += 1
     def choose_color(self, coord_i):
-        c_idx = 0
-        while True:
-            if coord_i <= self.color_idx[c_idx]:
-                return self.color_dict[c_idx]
-            else:
-                c_idx += 1
+        if coord_i <= 4:
+            return self.color_dict[0]
+        elif coord_i in [5, 7, 9]:
+            return self.color_dict[1]
+        elif coord_i in [6, 8, 10]:
+            return self.color_dict[2]
+        elif coord_i in [11, 13, 15]:
+            return self.color_dict[3]
+        elif coord_i in [12, 14, 16]:
+            return self.color_dict[4]
 
     def augment(self, data, label):
         for d, l in zip(data, label):
@@ -60,6 +72,12 @@ class Augmentor:
                 x = int(float_single_coord[i*2])
                 y = int(float_single_coord[i*2+1])
                 cv2.circle(image, (x, y), 5, self.choose_color(i), -1)
+
+            for i, j in self.connection:
+                x1, y1 = int(float_single_coord[i * 2]), int(float_single_coord[i * 2 + 1])
+                x2, y2 = int(float_single_coord[j * 2]), int(float_single_coord[j * 2 + 1])
+                cv2.line(image, (x1, y1), (x2, y2), self.choose_color(i), 2)
+
             cv2.imshow("coord", image)
             cv2.waitKey(0)
         cv2.destroyAllWindows()
@@ -67,10 +85,10 @@ class Augmentor:
 
 if __name__ == '__main__':
     import csv
-    file_path = "/media/hkuit164/Backup/xjl/20231207_kpsVideo/ml_train/train.csv"
+    file_path = "/media/hkuit164/WD20EJRX/ESTRNN_dataset/1_final_data/ml_3cls(bfo)/train.csv"
     data_feature = []
     data_target = []
-    feature_num = 35
+    feature_num = 34
 
     csv_file = csv.reader(open(file_path))
     for content in csv_file:
