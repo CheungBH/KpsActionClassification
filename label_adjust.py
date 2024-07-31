@@ -121,6 +121,11 @@ class ImageLabellerGUI:
             y = int(float_single_coord[i * 2 + 1])
             cv2.circle(image, (x, y), 5, self.choose_color(i), -1)
 
+        for i, j in self.connection:
+            x1, y1 = int(float_single_coord[i * 2]), int(float_single_coord[i * 2 + 1])
+            x2, y2 = int(float_single_coord[j * 2]), int(float_single_coord[j * 2 + 1])
+            cv2.line(image, (x1, y1), (x2, y2), self.choose_color(i), 2)
+
         self.photo = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
         self.photo = Image.fromarray(self.photo)
         self.photo = ImageTk.PhotoImage(self.photo)
