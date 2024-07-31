@@ -20,6 +20,7 @@ label_seq = 35
 # target_file = "classification_results.txt"  # Specify the target file name directly
 
 
+
 class ImageLabellerGUI:
     def __init__(self, root):
         self.root = root
@@ -146,9 +147,9 @@ class ImageLabellerGUI:
         current_label = current_data[label_seq-1]
         class_name = classes_list[current_label]
         self.selected_image_label.config(text=class_name, fg="red")  # Change text color to green
-        for button in self.class_buttons:
-            if button["text"] == class_name:
-                button.configure(bg="green")
+        # for button in self.class_buttons:
+        #     if button["text"] == class_name:
+        #         button.configure(bg="green")
         # else:
         #     self.selected_image_label.config(text="")
 
@@ -192,16 +193,16 @@ class ImageLabellerGUI:
             # if current_data in self.classification_results:
             #     class_name = self.classification_results[current_data]
             self.selected_image_label.config(text=class_name, fg="red")  # Change text color to green
-            for button in self.class_buttons:
-                if button["text"] == class_name:
-                    button.configure(bg="green")
+            # for button in self.class_buttons:
+            #     if button["text"] == class_name:
+            #         button.configure(bg="green")
 
         self.update_counter_label()
 
     def update_button_colors(self):
         # pass
-        for button in self.class_buttons:
-            button.configure(bg="SystemButtonFace")  # Reset button color
+        # for button in self.class_buttons:
+        #     button.configure(bg="SystemButtonFace")  # Reset button color
 
         current_data = self.data[self.current_index]
         current_label = current_data[label_seq-1]
@@ -212,6 +213,8 @@ class ImageLabellerGUI:
         for button in self.class_buttons:
             if button["text"] == class_name:
                 button.configure(bg="green")
+            else:
+                button.configure(bg="gray")
         # else:
         #     self.selected_image_label.config(text="")
 
