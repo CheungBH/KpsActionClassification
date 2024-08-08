@@ -51,15 +51,15 @@ for model_name, model in models.items():
 
     accuracy = (correct_predictions / total_samples) * 100
     results[model_name] = {
-        'total_time': total_time/total_samples,
+        'average_time': total_time/total_samples,
         'accuracy': accuracy
     }
 
 output_csv = args.output_path
 
-print("Model\t\tTotal Time (s)\tAccuracy (%)")
+print("Model\t\tAverage Time (s)\tAccuracy (%)")
 for model_name, result in results.items():
-    print(f"{model_name}\t{result['total_time']:.6f}\t\t{result['accuracy']:.6f}")
+    print(f"{model_name}\t{result['average_time']:.6f}\t\t{result['accuracy']:.6f}")
     with open(output_csv, "a", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow([model_name, result['total_time'], result['accuracy']])
+        writer.writerow([model_name, result['average_time'], result['accuracy']])
