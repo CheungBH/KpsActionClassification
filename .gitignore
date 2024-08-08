@@ -3,3 +3,6 @@
 *.joblib
 *.idea
 exp
+data
+__pycache__
+*.ipynb_checkpoints
