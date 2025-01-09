@@ -15,12 +15,13 @@ classes_list = prev_classes_list + novel_classes_list
 image_size = 300
 input_type = "json"
 input_csv_path = "/media/hkuit164/WD20EJRX/Aiden/Tennis_dataset/pose_cls_sources/pose_4cls_lr_0726/33.csv"
-input_json_path = "/media/hkuit164/WD20EJRX/Aiden/Tennis_dataset/sources/merge_frame_pose_sources/online_tennis_slice1/online_tennis_slice1.json"
+input_json_path = "/Users/cheungbh/Downloads/result1.json"
 output_csv_path = "/media/hkuit164/Backup/KpsActionClassification/test.csv"
 # choose how many frame merge togerther
 merge_frame_size = 5
 # choose the merge step
 merge_frame_step = 5
+frame_step = 5
 kps_size = 34
 label_seq = kps_size*merge_frame_size+1
 
@@ -52,8 +53,8 @@ def read_json_data(json_path):
             id1_data.append(id1_frame_data)
             id2_data.append(id2_frame_data)
 
-        id1_merge_list = merge_sublists(id1_data, merge_frame_size, merge_frame_step)
-        id2_merge_list = merge_sublists(id2_data, merge_frame_size, merge_frame_step)
+        id1_merge_list = merge_sublists(id1_data, merge_frame_size, merge_frame_step, frame_step)
+        id2_merge_list = merge_sublists(id2_data, merge_frame_size, merge_frame_step, frame_step)
 
     return id1_merge_list, id2_merge_list
 
@@ -70,10 +71,15 @@ def normalize_keypoints(keypoints, bbox):
 
     return normalized_keypoints
 
-def merge_sublists(nest_list, merge_frame_size, merge_step):
+def merge_sublists(nest_list, merge_frame_size, merge_step, frame_step):
     merged_list = []
-    for i in range(0, len(nest_list) - merge_frame_size + 1, merge_step):
-        merge_sublist = [item for sublist in nest_list[i:i+merge_frame_size] for item in sublist]
+    for i in range(0, len(nest_list) - merge_frame_size - frame_step * (merge_frame_size - 1), merge_step):
+        # for
+        merge_sublist = []
+        for j in range(merge_frame_size):
+            merge_sublist += nest_list[i+j*frame_step]
+
+        # merge_sublist = [item for sublist in nest_list[i:i+merge_frame_size] for item in sublist]
         # add default class
         merge_sublist.append(0)
         # add file name
