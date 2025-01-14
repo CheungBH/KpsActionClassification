@@ -111,7 +111,7 @@ def main():
                                         # print("Training accuracy is : ", train_accuracy)
                                         test_accuracy = accuracy_score(predict_results_test, test_target)
                                         if (test_accuracy * 100) > args.save_lowest_acc:
-                                            dump(gbdt, f"{args.output_folder}/model_{search_idx}_{test_accuracy}.joblib")
+                                            dump(gbdt, f"{args.output_folder}/model_{test_accuracy}_{search_idx}.joblib")
                                         # print("Testing accuracy is : ", test_accuracy)
                                         # print("The test confusion matrix is:")
                                         conf_mat = confusion_matrix(test_target, predict_results_test)
