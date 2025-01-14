@@ -14,7 +14,7 @@ class Augmentor:
         self.color_idx = [4, 7, 10, 13, 16]
         self.augment_factor = []
         self.connection = [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (1, 3), (2, 4), (3, 4), (5, 6), (5, 7), (7, 9), (6, 8), (8, 10), (11, 12), (11, 13), (13, 15), (12, 14), (14, 16), (5, 11), (6, 12)]
-
+        self.classes_name = ["backhand", "forehand", "overhead", "waiting"]
     # def choose_color(self, coord_i):
         # c_idx = 0
         # while True:
@@ -65,9 +65,14 @@ class Augmentor:
         if data is None or label is None:
             data, label = self.augmented_data, self.augmented_label
         for single_coord, label in zip(data, label):
+            if int(label) != 0:
+                continue
             image = np.zeros((1000, 1000, 3), dtype=np.uint8)
             float_single_coord = [x * 1000 for x in single_coord]
-            print(label)
+            cv2.putText(image, self.classes_name[int(label)], (100, 100), fontFace=cv2.FONT_HERSHEY_TRIPLEX,
+                        fontScale=3, color=(255, 255, 255), thickness=3)
+
+            # print(label)
             for i in range(17):
                 x = int(float_single_coord[i*2])
                 y = int(float_single_coord[i*2+1])
@@ -85,7 +90,7 @@ class Augmentor:
 
 if __name__ == '__main__':
     import csv
-    file_path = "/media/hkuit164/WD20EJRX/ESTRNN_dataset/1_final_data/ml_3cls(bfo)/train.csv"
+    file_path = "data/general_ML_bf/train.csv"
     data_feature = []
     data_target = []
     feature_num = 34
