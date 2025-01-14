@@ -130,8 +130,8 @@ def main():
                                         print(classification_report(test_target, predict_results_test))
                                         # csv_file_path = args.csv_path
 
-                                        result_title = ["algo", 'Train Acc', 'Test Acc'] + ['Class ' + str(i) + ' Acc' for i in range(len(cls_result))]
-                                        result_data = ["GBDT", train_accuracy, test_accuracy] + [acc for acc in cls_result] + [f"Learning_rate: {lr}, n_estimators: {est}, subsample: {sub}, min_samples_split: {sample_split}, min_samples_leaf: {sample_leaf}, min_weight_fraction_leaf: {weight_fraction_leaf}, max_depth: {depth}, min_impurity_decrease: {impurity_decrease}"]
+                                        result_title = ["algo", 'idx', 'Train Acc', 'Test Acc'] + ['Class ' + str(i) + ' Acc' for i in range(len(cls_result))]
+                                        result_data = ["GBDT", search_idx, train_accuracy, test_accuracy] + [acc for acc in cls_result] + [f"Learning_rate: {lr}, n_estimators: {est}, subsample: {sub}, min_samples_split: {sample_split}, min_samples_leaf: {sample_leaf}, min_weight_fraction_leaf: {weight_fraction_leaf}, max_depth: {depth}, min_impurity_decrease: {impurity_decrease}"]
 
                                         with open(csv_path, 'a', newline='') as file:
                                             writer = csv.writer(file)
