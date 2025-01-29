@@ -12,7 +12,6 @@ from sklearn.preprocessing import StandardScaler
 from joblib import dump
 import argparse
 from augmentor import Augmentor
-from MLsrc_range import generate_param_dict
 
 
 algorithm_dict = {
@@ -51,18 +50,21 @@ def data_transform(traffic_feature):
     return traffic_feature
 
 
-def run_algorithm(algorithm_name, train_file, test_file, exp_id, root_folder, feature_num, save_score):
+def run_algorithm(config_file, train_file, test_file, config_folder, output_folder, csv_file_path, box_size, box_ratio, feature_num, save_score):
 
-    csv_file_path = os.path.join(root_folder, "results.csv")
+    if box_size is True:
+        feature_num += 8
 
-
-    name = "{}-{}".format(exp_id, algorithm_name)
-    sub_folder = os.path.join(root_folder, name)
-    os.makedirs(sub_folder, exist_ok=True)
-
+    if box_ratio is True:
+        feature_num += 1
     train_feature, train_target = load_data(train_file, feature_num, augment=True)
     test_feature, test_target = load_data(test_file, feature_num)
 
+    # config_file = os.path.join(config_folder, f"{algorithm_name}_cfg.json")
+    with open(config_file, 'r') as f:
+        config = json.load(f)
+    algorithm_name = config["name"]
+    config.pop("name")
 
     if algorithm_name not in algorithm_dict:
         raise ValueError("Unsupported algorithm")
@@ -71,34 +73,32 @@ def run_algorithm(algorithm_name, train_file, test_file, exp_id, root_folder, fe
         train_feature = data_transform(train_feature)
         test_feature = data_transform(test_feature)
 
-    config = generate_param_dict(algorithm_name)
-    algorithm = algorithm_dict[algorithm_name](**config)
+    algorithm_class = algorithm_dict[algorithm_name]
+    algorithm = algorithm_class(**config)
     algorithm.fit(train_feature, train_target)
-    config["algo"] = algorithm_name
-
     predict_results_train = algorithm.predict(train_feature)
     predict_results_test = algorithm.predict(test_feature)
-    # if (test_accuracy * 100) > save_score:
-        # config_name = config_file.split("/")[-1].split(".")[0]
-    dump(algorithm, f"{sub_folder}/model.joblib")
-    with open(f"{sub_folder}/config.json", "w") as f:
-        json.dump(config, f, indent=4)
+    test_accuracy = accuracy_score(predict_results_test, test_target)
+    if (test_accuracy * 100) > save_score:
+        config_name = config_file.split("/")[-1].split(".")[0]
+        dump(algorithm, f"{output_folder}/{config_name}_model.joblib")
+    else:
+        for save_idx in range(10):
+            algorithm.fit(train_feature, train_target)
+            predict_results_test = algorithm.predict(test_feature)
+            test_accuracy = accuracy_score(predict_results_test, test_target)
+            if (test_accuracy * 100) > save_score:
+                dump(algorithm, f"{output_folder}/{algorithm_name}_model.joblib")
+                break
 
-    r_file = open(f"{sub_folder}/result.txt", "w")
 
     train_accuracy = accuracy_score(predict_results_train, train_target)
     print(f"Training accuracy for {algorithm_name} is: {train_accuracy}")
-    test_accuracy = accuracy_score(predict_results_test, test_target)
     print(f"Testing accuracy for {algorithm_name} is: {test_accuracy}")
-
-    if test_accuracy * 100 < save_score:
-        return
 
     print("\nThe train confusion matrix is:")
     train_conf_mat = confusion_matrix(train_target, predict_results_train)
     print(train_conf_mat)
-    r_file.write("Train confusion matrix\n")
-
 
     train_cls_result = []
     train_id = 0
@@ -106,14 +106,11 @@ def run_algorithm(algorithm_name, train_file, test_file, exp_id, root_folder, fe
         row_sum = sum(row)
         row_result = row[train_id] / row_sum
         train_cls_result.append(row_result)
-        r_file.write(str(row.tolist()) + "\n")
         train_id += 1
 
     print("\nThe test confusion matrix is:")
     test_conf_mat = confusion_matrix(test_target, predict_results_test)
     print(test_conf_mat)
-    r_file.write("\nTest confusion matrix\n")
-    # r_file.write(test_conf_mat)
 
     test_cls_result = []
     test_id = 0
@@ -121,7 +118,6 @@ def run_algorithm(algorithm_name, train_file, test_file, exp_id, root_folder, fe
         row_sum = sum(row)
         row_result = row[test_id] / row_sum
         test_cls_result.append(row_result)
-        r_file.write(str(row.tolist()) + "\n")
         test_id += 1
 
     print("\nTrain Class accuracy: ")
@@ -130,19 +126,14 @@ def run_algorithm(algorithm_name, train_file, test_file, exp_id, root_folder, fe
     print(test_cls_result)
 
     print("\n\nOverall train result:")
-    train_report = classification_report(train_target, predict_results_train)
-    print(train_report)
-    r_file.write("\nTrain Report\n")
-    r_file.write(train_report)
-
+    print(classification_report(train_target, predict_results_train))
     print("\n\nOverall test result:")
-    test_report = classification_report(test_target, predict_results_test)
-    print(test_report)
-    r_file.write("\nTest Report\n")
-    r_file.write(test_report)
+    print(classification_report(test_target, predict_results_test))
 
-    result_title = ["algo", 'idx', 'Train Acc', 'Test Acc'] + ['Class ' + str(i) + ' Acc' for i in range(len(test_cls_result))]
-    result_data = [algorithm_name, exp_id, train_accuracy, test_accuracy] + [acc for acc in test_cls_result]
+    # csv_file_path = "/media/hkuit164/Backup/xjl/ML_data_process/ML/0206far/csv/results.csv"
+
+    result_title = ["algo", 'Train Acc', 'Test Acc'] + ['Class ' + str(i) + ' Acc' for i in range(len(test_cls_result))]
+    result_data = [algorithm_name, train_accuracy, test_accuracy] + [acc for acc in test_cls_result]
 
     with open(csv_file_path, 'a', newline='') as file:
         writer = csv.writer(file)
@@ -155,18 +146,21 @@ def run_algorithm(algorithm_name, train_file, test_file, exp_id, root_folder, fe
         if empty:
             writer.writerow(result_title)
             writer.writerow(result_data)
+            # writer.writerow(test_conf_mat)
         else:
             writer.writerow(result_data)
+            # writer.writerow(test_conf_mat)
 
 
 def main():
     parser = argparse.ArgumentParser()
+    # parser.add_argument("--train_file", type=str, help="Path to the training CSV file", default="data/20231207_ML_model/train.csv")
+    # parser.add_argument("--test_file", type=str, help="Path to the testing CSV file", default="data/20231207_ML_model/test.csv")
     parser.add_argument("--data_folder", type=str, help="Path to the folder of CSV files", required=True)
-    parser.add_argument("--output_folder", type=str, help="Path to save the trained models", default="exp/random")
+    parser.add_argument("--config_folder", type=str, help="Path to the folder containing config files", default="cfg/base")
+    parser.add_argument("--output_folder", type=str, help="Path to save the trained models", default="exp")
     parser.add_argument("--feature_number", type=int, default=34)
     parser.add_argument("--save_score", type=int, default=0)
-    parser.add_argument("--algo", type=str, default="all")
-    parser.add_argument("--repeat_time", type=int, default=20)
 
     args = parser.parse_args()
     train_file, test_file = os.path.join(args.data_folder, "train.csv"), os.path.join(args.data_folder, "val.csv")
@@ -174,12 +168,15 @@ def main():
     feature_number = args.feature_number
     os.makedirs(args.output_folder, exist_ok=True)
     save_score = args.save_score
-
-    algorithms = [args.algo] if args.algo != "all" else list(algorithm_dict.keys())
-    for algorithm in algorithms:
-        for idx in range(args.repeat_time):
-            run_algorithm(algorithm, train_file, test_file, idx, args.output_folder, feature_number, save_score)
-
+    bbox_size = False
+    bbox_hw_ratio = False
+    algorithm_configs = [os.path.join(args.config_folder, config) for config in os.listdir(args.config_folder)]
+    # algorithm_names = ['knn', 'GBDT', 'DeTree', 'LR', 'RF', 'AdaBoost', 'SVM', 'Bayes', 'bagging']
+    output_csv = os.path.join(args.output_folder, "results.csv")
+    for idx, algorithm_config in enumerate(algorithm_configs):
+        print(f"Running {algorithm_config}")
+        run_algorithm(algorithm_config, train_file, test_file, args.config_folder, args.output_folder,
+                      output_csv, bbox_size, bbox_hw_ratio, feature_number, save_score)
 
 
 if __name__ == "__main__":
