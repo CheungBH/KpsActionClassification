@@ -9,16 +9,16 @@ SVR_param = {
 }
 
 Tree_param = {
-    "max_depth": (1, 3),
-    "min_samples_split": (2, 3),
-    "min_samples_leaf": (1, 3)
+    "max_depth": (1, 10),
+    "min_samples_split": (2, 20),
+    "min_samples_leaf": (1, 20)
 }
 
 RandomForestRegressor_param = {
     "n_estimators": (50, 200),
-    "max_depth": (1, 3),
-    "min_samples_split": (2, 3),
-    "min_samples_leaf": (1, 3),
+    "max_depth": (1, 10),
+    "min_samples_split": (2, 20),
+    "min_samples_leaf": (1, 20),
     "max_features": ["auto", "sqrt", "log2"]
 }
 

@@ -55,7 +55,8 @@ def run_algorithm(algorithm_name, train_file, test_file, exp_id, root_folder):
     mse_train = mean_squared_error(y_train, algorithm.predict(X_train))
 
     with open(f"{sub_folder}/result.txt", "w") as r_file:
-        r_file.write(f"Mean Squared Error: {mse}\n")
+        r_file.write(f"Test Mean Squared Error: {mse}\n")
+        r_file.write(f"Train Mean Squared Error: {mse_train}\n")
 
     result_title = ["algo", 'idx', 'MSE_train', "MSE_test"]
     result_data = [algorithm_name, exp_id, mse_train, mse]
@@ -80,7 +81,7 @@ def main():
     parser.add_argument("--data_folder", type=str, help="Path to the folder of CSV files", required=True)
     parser.add_argument("--output_folder", type=str, help="Path to save the trained models", default="exp_reg")
     parser.add_argument("--algo", type=str, default="all")
-    parser.add_argument("--repeat_time", type=int, default=10)
+    parser.add_argument("--repeat_time", type=int, default=3)
 
     args = parser.parse_args()
     train_file, test_file = os.path.join(args.data_folder, "train.csv"), os.path.join(args.data_folder, "val.csv")
