@@ -83,14 +83,14 @@ def main():
     parser.add_argument("--repeat_time", type=int, default=10)
 
     args = parser.parse_args()
-    train_file = args.data_file
+    train_file, test_file = os.path.join(args.data_file, "train.csv"), os.path.join(args.data_file, "val.csv")
 
     os.makedirs(args.output_folder, exist_ok=True)
 
     algorithms = [args.algo] if args.algo != "all" else list(algorithm_dict.keys())
     for algorithm in algorithms:
         for idx in range(args.repeat_time):
-            run_algorithm(algorithm, train_file, train_file, idx, args.output_folder)
+            run_algorithm(algorithm, train_file, test_file, idx, args.output_folder)
 
 
 if __name__ == '__main__':
