@@ -77,13 +77,13 @@ def run_algorithm(algorithm_name, train_file, test_file, exp_id, root_folder):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_file", type=str, help="Path to the folder of CSV files", required=True)
+    parser.add_argument("--data_folder", type=str, help="Path to the folder of CSV files", required=True)
     parser.add_argument("--output_folder", type=str, help="Path to save the trained models", default="exp_reg")
     parser.add_argument("--algo", type=str, default="all")
     parser.add_argument("--repeat_time", type=int, default=10)
 
     args = parser.parse_args()
-    train_file, test_file = os.path.join(args.data_file, "train.csv"), os.path.join(args.data_file, "val.csv")
+    train_file, test_file = os.path.join(args.data_folder, "train.csv"), os.path.join(args.data_folder, "val.csv")
 
     os.makedirs(args.output_folder, exist_ok=True)
 
